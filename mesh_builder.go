@@ -188,6 +188,7 @@ func assertB(b bool) {
 type meshBuilderFace struct {
 	halfEdgeIndex                   int
 	plane                           plane
+	mostDistantPoint                int
 	mostDistantPointDist            float64
 	visibilityCheckedOnIteration    uint
 	isVisibleFaceOnCurrentIteration bool

@@ -13,7 +13,7 @@ type convexHull struct {
 func newConvexHull(mesh meshBuilder, pointCloud []r3.Vector, ccw bool, useOriginalIndices bool) convexHull {
 	var hull convexHull
 
-	var faceProcessed [len(mesh.faces)]bool
+	faceProcessed := make([]bool, len(mesh.faces))
 	var faceStack []int
 	vertexIndexMapping := make(map[int]int) // Map vertex indices from original point cloud to the new mesh vertex indices
 	for i, f := range mesh.faces {
