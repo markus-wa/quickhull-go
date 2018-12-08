@@ -179,7 +179,7 @@ func newMeshBuilder(a, b, c, d int) meshBuilder {
 }
 
 func assertB(b bool) {
-	// TODO: Delete assertion
+	// TODO: delete assertion?
 	if !b {
 		panic("Assertion failed")
 	}
@@ -190,7 +190,7 @@ type meshBuilderFace struct {
 	plane                           plane
 	mostDistantPoint                int
 	mostDistantPointDist            float64
-	visibilityCheckedOnIteration    uint
+	visibilityCheckedOnIteration    int
 	isVisibleFaceOnCurrentIteration bool
 	inFaceStack                     bool
 	horizonEdgesOnCurrentIteration  byte // Bit for each half edge assigned to this face, each being 0 or 1 depending on whether the edge belongs to horizon edge
