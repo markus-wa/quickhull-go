@@ -19,3 +19,10 @@ func triangleNormal(a r3.Vector, b r3.Vector, c r3.Vector) r3.Vector {
 func signedDistanceToPlane(v r3.Vector, p plane) float64 {
 	return p.n.Dot(v) + p.d
 }
+
+func squaredDistanceBetweenPointAndRay(p r3.Vector, r ray) float64 {
+	s := p.Sub(r.s)
+	t := s.Dot(r.v)
+	return s.Norm2() - t*t*r.vInvLengthSquared
+
+}

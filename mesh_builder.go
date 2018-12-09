@@ -175,6 +175,27 @@ func newMeshBuilder(a, b, c, d int) meshBuilder {
 	}
 	mb.halfEdges = append(mb.halfEdges, dc)
 
+	// Create faces
+	abc := meshBuilderFace{
+		halfEdgeIndex: 0,
+	}
+	mb.faces = append(mb.faces, abc)
+
+	acd := meshBuilderFace{
+		halfEdgeIndex: 3,
+	}
+	mb.faces = append(mb.faces, acd)
+
+	bad := meshBuilderFace{
+		halfEdgeIndex: 6,
+	}
+	mb.faces = append(mb.faces, bad)
+
+	cbd := meshBuilderFace{
+		halfEdgeIndex: 9,
+	}
+	mb.faces = append(mb.faces, cbd)
+
 	return mb
 }
 

@@ -1,6 +1,7 @@
 package quickhull
 
 import (
+	"fmt"
 	"log"
 	"math"
 
@@ -28,29 +29,28 @@ type quickHull struct {
 }
 
 // Find indices of extreme values (max x, min x, max y, min y, max z, min z) for the given point cloud
-func (qh *quickHull) calculateExtremeValues() {
-	vd0 := qh.vertexData[0]
+func extremeValues(vertexData []r3.Vector) (extremeValueIndices [6]int) {
+	vd0 := vertexData[0]
 	extremeVals := [6]float64{vd0.X, vd0.X, vd0.Y, vd0.Y, vd0.Z, vd0.Z}
-	var indices [6]int
 
-	xv := func(i int, i2 int, v float64) {
+	xv := func(i, i2 int, v float64, idx int) {
 		if v > extremeVals[i] {
 			extremeVals[i] = v
-			indices[i] = i
-		} else if v > extremeVals[i2] {
+			extremeValueIndices[i] = idx
+		} else if v < extremeVals[i2] {
 			extremeVals[i2] = v
-			indices[i2] = i
+			extremeValueIndices[i2] = idx
 		}
 	}
 
-	for i := 1; i < len(qh.vertexData); i++ {
-		pos := qh.vertexData[i]
-		xv(0, 1, pos.X)
-		xv(2, 3, pos.Y)
-		xv(4, 5, pos.Z)
+	for i, pos := range vertexData[1:] {
+		idx := i + 1
+		xv(0, 1, pos.X, idx)
+		xv(2, 3, pos.Y, idx)
+		xv(4, 5, pos.Z, idx)
 	}
 
-	qh.extremeValueIndices = indices
+	return
 }
 
 type vectorField int
@@ -62,9 +62,9 @@ const (
 )
 
 // Compute scale of the vertex data.
-func (qh *quickHull) calculateScale() (s float64) {
+func scale(vertexData []r3.Vector, extremeValueIndices [6]int) (s float64) {
 	scl := func(i int, valType vectorField) {
-		v := qh.vertexData[qh.extremeValueIndices[i]]
+		v := vertexData[extremeValueIndices[i]]
 		var a float64
 		switch valType {
 		case vfX:
@@ -174,14 +174,64 @@ func (qh quickHull) initialTetrahedron() meshBuilder {
 	baseTriangle := [3]int{p1, p2, maxI}
 	baseTriangleVertices := [3]r3.Vector{qh.vertexData[baseTriangle[0]], qh.vertexData[baseTriangle[1]], qh.vertexData[baseTriangle[2]]}
 
-	// Next step is to find the 4th vertex of the tetrahedron. We naturally choose the point farthest away from the triangle plane.
+	// Next step is to find the 4th vertex of the tetrahedron.
+	// We naturally choose the point farthest away from the triangle plane.
 	maxD = qh.epsilon
 	maxI = 0
-	n := triangleNormal(baseTriangleVertices[0], baseTriangleVertices[1], baseTriangleVertices[2])
-	trianglePlane := newPlane(n, baseTriangleVertices[0])
+	{
+		n := triangleNormal(baseTriangleVertices[0], baseTriangleVertices[1], baseTriangleVertices[2])
+		{
+			trianglePlane := newPlane(n, baseTriangleVertices[0])
+			for i := 0; i < nVertices; i++ {
+				d := math.Abs(signedDistanceToPlane(qh.vertexData[i], trianglePlane))
+				if d > maxD {
+					maxD = d
+					maxI = i
+				}
+			}
+		}
+		if maxD == qh.epsilon {
+			// All the points seem to lie on a 2D subspace of R^3. How to handle this?
+			// Well, let's add one extra point to the point cloud so that the convex hull will have volume.
+			qh.planar = true
+			n := triangleNormal(baseTriangleVertices[1], baseTriangleVertices[2], baseTriangleVertices[0])
+			qh.planarPointCloudTemp = qh.planarPointCloudTemp[:0]
+			// TODO: is this append correct?
+			qh.planarPointCloudTemp = append(qh.vertexData, qh.planarPointCloudTemp...)
+			extraPoint := n.Add(qh.vertexData[0])
+			qh.planarPointCloudTemp = append(qh.planarPointCloudTemp, extraPoint)
+			maxI = len(qh.planarPointCloudTemp) - 1
+			qh.vertexData = qh.planarPointCloudTemp
+		}
 
-	// TODO: quickHull.initialTetrahedron()
-	return meshBuilder{}
+		// Enforce CCW orientation (if user prefers clockwise orientation, swap two vertices in each triangle when final mesh is created)
+		triPlane := newPlane(n, baseTriangleVertices[0])
+		if triPlane.isPointOnPositiveSide(qh.vertexData[maxI]) {
+			baseTriangle[0], baseTriangle[1] = baseTriangle[1], baseTriangle[0]
+		}
+	}
+
+	// Create a tetrahedron half edge mesh and compute planes defined by each triangle
+	mesh := newMeshBuilder(baseTriangle[0], baseTriangle[1], baseTriangle[2], maxI)
+	for i := range mesh.faces {
+		v := mesh.vertexIndicesOfFace(mesh.faces[i])
+		va := qh.vertexData[v[0]]
+		vb := qh.vertexData[v[1]]
+		vc := qh.vertexData[v[2]]
+		n := triangleNormal(va, vb, vc)
+		mesh.faces[i].plane = newPlane(n, va)
+	}
+
+	// Finally we assign a face for each vertex outside the tetrahedron (vertices inside the tetrahedron have no role anymore)
+	for i := 0; i < nVertices; i++ {
+		for j := range mesh.faces {
+			if qh.addPointToFace(&mesh.faces[j], i) {
+				break
+			}
+		}
+	}
+
+	return mesh
 }
 
 // Given a list of half edges, try to rearrange them so that they form a loop. Return true on success.
@@ -206,7 +256,7 @@ func (qh quickHull) reorderHorizontalEdges(horizontalEdges []int) bool {
 }
 
 // Associates a point with a face if the point resides on the positive side of the plane. Returns true if the points was on the positive side.
-func (qh *quickHull) addPointToFace(face meshBuilderFace, pointIndex int) bool {
+func (qh *quickHull) addPointToFace(face *meshBuilderFace, pointIndex int) bool {
 	d := signedDistanceToPlane(qh.vertexData[pointIndex], face.plane)
 	if d > 0 && d*d > qh.epsilonSquared*face.plane.sqrNLength {
 		/* TODO: optimize
@@ -266,7 +316,8 @@ func (qh *quickHull) createConvexHalfEdgeMesh() {
 			iter = 0
 		}
 
-		topFaceIndex, faceList := faceList[0], faceList[1:]
+		var topFaceIndex int
+		topFaceIndex, faceList = faceList[0], faceList[1:]
 
 		tf := qh.mesh.faces[topFaceIndex]
 		tf.inFaceStack = false
@@ -290,7 +341,7 @@ func (qh *quickHull) createConvexHalfEdgeMesh() {
 		possiblyVisibleFaces = append(possiblyVisibleFaces, faceData{faceIndex: topFaceIndex, enteredFromHalfEdge: maxInt})
 		for len(possiblyVisibleFaces) > 0 {
 			fd := possiblyVisibleFaces[len(possiblyVisibleFaces)-1]
-			possiblyVisibleFaces := possiblyVisibleFaces[:len(possiblyVisibleFaces)-1]
+			possiblyVisibleFaces = possiblyVisibleFaces[:len(possiblyVisibleFaces)-1]
 			pvf := qh.mesh.faces[fd.faceIndex]
 			assertB(!pvf.isDisabled())
 
@@ -332,7 +383,7 @@ func (qh *quickHull) createConvexHalfEdgeMesh() {
 					ind = 2
 				}
 			}
-			qh.mesh.faces[qh.mesh.halfEdges[fd.enteredFromHalfEdge].face].horizonEdgesOnCurrentIteration |= (1 << ind)
+			qh.mesh.faces[qh.mesh.halfEdges[fd.enteredFromHalfEdge].face].horizonEdgesOnCurrentIteration |= 1 << ind
 		}
 
 		nHorizontalEdges := len(horizontalEdges)
@@ -440,7 +491,7 @@ func (qh *quickHull) createConvexHalfEdgeMesh() {
 					continue
 				}
 				for i := 0; i < nHorizontalEdges; i++ {
-					if qh.addPointToFace(qh.mesh.faces[qh.newFaceIndices[i]], pointIdx) {
+					if qh.addPointToFace(&qh.mesh.faces[qh.newFaceIndices[i]], pointIdx) {
 						break
 					}
 				}
@@ -463,6 +514,8 @@ func (qh *quickHull) createConvexHalfEdgeMesh() {
 		}
 	}
 
+	fmt.Println()
+
 	/* TODO: optimize
 	// Cleanup
 	m_indexVectorPool.clear();
@@ -477,8 +530,8 @@ func (qh *quickHull) buildMesh(pointCloud []r3.Vector, ccw bool, useOriginalIndi
 	qh.vertexData = pointCloud
 
 	// Very first: find extreme values and use them to compute the scale of the point cloud.
-	qh.calculateExtremeValues()  // TODO: maybe store on qh here instead of in the func
-	scale := qh.calculateScale() // TODO: maybe pass extreme values
+	qh.extremeValueIndices = extremeValues(qh.vertexData)
+	scale := scale(qh.vertexData, qh.extremeValueIndices) // TODO: maybe pass extreme values
 
 	// Epsilon we use depends on the scale
 	qh.epsilon = epsilon * scale
@@ -492,9 +545,9 @@ func (qh *quickHull) buildMesh(pointCloud []r3.Vector, ccw bool, useOriginalIndi
 
 	if qh.planar {
 		extraPointIdx := len(qh.planarPointCloudTemp) - 1
-		for _, he := range qh.mesh.halfEdges {
-			if he.endVertex == extraPointIdx {
-				he.endVertex = 0
+		for i := range qh.mesh.halfEdges {
+			if qh.mesh.halfEdges[i].endVertex == extraPointIdx {
+				qh.mesh.halfEdges[i].endVertex = 0
 			}
 		}
 		qh.vertexData = pointCloud
@@ -507,8 +560,15 @@ func (qh *quickHull) convexHull(pointCloud []r3.Vector, ccw bool, useOriginalInd
 	return newConvexHull(qh.mesh, qh.vertexData, ccw, useOriginalIndices)
 }
 
+const (
+	epsilonF = 0.0001
+	epsilonD = 0.0000001
+)
+
 // ConvexHull calculates the convex hull of the given point cloud using the Quickhull algorithm.
 // See: https://en.wikipedia.org/wiki/Quickhull
 func ConvexHull(pointCloud []r3.Vector) []r3.Vector {
-	return []r3.Vector{}
+	qh := new(quickHull)
+	hull := qh.convexHull(pointCloud, true, true, epsilonF)
+	return hull.vertices
 }

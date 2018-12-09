@@ -1,7 +1,7 @@
 package quickhull
 
 import (
-	r3 "github.com/golang/geo/r3"
+	"github.com/golang/geo/r3"
 )
 
 type halfEdgeMesh struct {
@@ -65,17 +65,17 @@ func newHalfEdgeMesh(builder meshBuilder, vertices []r3.Vector) halfEdgeMesh {
 		halfEdgeMapping[i] = len(heMesh.halfEdges) - 1
 	}
 
-	for _, f := range heMesh.faces {
-		_, contains := halfEdgeMapping[f.halfEdgeIndex]
+	for i := range heMesh.faces {
+		_, contains := halfEdgeMapping[heMesh.faces[i].halfEdgeIndex]
 		assertB(contains)
-		f.halfEdgeIndex = halfEdgeMapping[f.halfEdgeIndex]
+		heMesh.faces[i].halfEdgeIndex = halfEdgeMapping[heMesh.faces[i].halfEdgeIndex]
 	}
 
-	for _, he := range heMesh.halfEdges {
-		he.face = faceMapping[he.face]
-		he.opp = halfEdgeMapping[he.opp]
-		he.next = halfEdgeMapping[he.next]
-		he.endVertex = vertexMapping[he.endVertex]
+	for i := range heMesh.halfEdges {
+		heMesh.halfEdges[i].face = faceMapping[heMesh.halfEdges[i].face]
+		heMesh.halfEdges[i].opp = halfEdgeMapping[heMesh.halfEdges[i].opp]
+		heMesh.halfEdges[i].next = halfEdgeMapping[heMesh.halfEdges[i].next]
+		heMesh.halfEdges[i].endVertex = vertexMapping[heMesh.halfEdges[i].endVertex]
 	}
 
 	return heMesh
