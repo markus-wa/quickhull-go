@@ -40,24 +40,24 @@ func TestConvexHull3D(t *testing.T) {
 	// Construct a point cloud that looks roughly like this.
 	// A should be inside the Convex Hull.
 	/*
-@ + + + + + + + + + + + @
-+\                      +\
-+ \                     + \
-+  \                    +  \
-+   \                   +   \
-+    @ + + + + + + + + +++ + @
-+    +                  +    +
-+    +                  +    +
-+    +                  +    +
-+    +         A        +    +
-+    +                  +    +
-+    +                  +    +
-@ + +++ + + + + + + + + @    +
- \   +                   \   +
-  \  +                    \  +
-   \ +                     \ +
-    \+                      \+
-     @ + + + + + + + + + + + @
+		@ + + + + + + + + + + + @
+		+\                      +\
+		+ \                     + \
+		+  \                    +  \
+		+   \                   +   \
+		+    @ + + + + + + + + +++ + @
+		+    +                  +    +
+		+    +                  +    +
+		+    +                  +    +
+		+    +         A        +    +
+		+    +                  +    +
+		+    +                  +    +
+		@ + +++ + + + + + + + + @    +
+		 \   +                   \   +
+		  \  +                    \  +
+		   \ +                     \ +
+		    \+                      \+
+		     @ + + + + + + + + + + + @
 	*/
 	pointCloud := []r3.Vector{
 		{X: 0, Y: 0, Z: 0},
@@ -83,4 +83,24 @@ func TestConvexHull3D(t *testing.T) {
 	}
 
 	assert.ElementsMatch(t, expectedHull, ConvexHull(pointCloud), "ConvexHull should be as expected")
+}
+
+func TestPlanes(t *testing.T) {
+	m := r3.Vector{X: 1, Y: 0, Z: 0}
+	n := r3.Vector{X: 2, Y: 0, Z: 0}
+	p := newPlane(m, n)
+
+	var dist float64
+	dist = signedDistanceToPlane(r3.Vector{X: 3, Y: 0, Z: 0}, p)
+	assert.Equal(t, 1.0, dist)
+
+	dist = signedDistanceToPlane(r3.Vector{X: 1, Y: 0, Z: 0}, p)
+	assert.Equal(t, -1.0, dist)
+
+	m = r3.Vector{X: 2, Y: 0, Z: 0}
+	p = newPlane(m, n)
+
+	dist = signedDistanceToPlane(r3.Vector{X: 6, Y: 0, Z: 0}, p)
+
+	assert.Equal(t, 8.0, dist)
 }
