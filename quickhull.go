@@ -88,7 +88,7 @@ func scale(vertexData []r3.Vector, extremeValueIndices [6]int) (s float64) {
 }
 
 // Create a half edge mesh representing the base tetrahedron from which the QuickHull iteration proceeds. m_extremeValues must be properly set up when this is called.
-func (qh quickHull) initialTetrahedron() meshBuilder {
+func (qh *quickHull) initialTetrahedron() meshBuilder {
 	nVertices := len(qh.vertexData)
 
 	// If we have at most 4 points, just return p1 degenerate tetrahedron:
@@ -237,8 +237,8 @@ func (qh quickHull) initialTetrahedron() meshBuilder {
 // Given a list of half edges, try to rearrange them so that they form a loop. Return true on success.
 func (qh quickHull) reorderHorizontalEdges(horizontalEdges []int) bool {
 	nEdges := len(horizontalEdges)
-	for i, v := range horizontalEdges {
-		endVertex := qh.mesh.halfEdges[v].endVertex
+	for i := 0; i < nEdges-1; i++ {
+		endVertex := qh.mesh.halfEdges[horizontalEdges[i]].endVertex
 		var foundNext bool
 		for j := i + 1; j < nEdges; j++ {
 			beginVertex := qh.mesh.halfEdges[qh.mesh.halfEdges[horizontalEdges[j]].opp].endVertex
@@ -277,8 +277,8 @@ func (qh *quickHull) addPointToFace(face *meshBuilderFace, pointIndex int) bool 
 const (
 	minUint = uint(0)
 	maxUint = ^minUint
-	minInt  = -maxInt - 1
-	maxInt  = int(maxUint >> 1)
+	//minInt  = -maxInt - 1
+	maxInt = int(maxUint >> 1)
 )
 
 // This will update m_mesh from which we create the ConvexHull object that getConvexHull function returns
@@ -299,7 +299,7 @@ func (qh *quickHull) createConvexHalfEdgeMesh() {
 
 	var faceList []int
 	for i := 0; i < 4; i++ {
-		f := qh.mesh.faces[i]
+		f := &qh.mesh.faces[i]
 		if len(f.pointsOnPositiveSide) > 0 {
 			faceList = append(faceList, i)
 			f.inFaceStack = true
@@ -319,7 +319,7 @@ func (qh *quickHull) createConvexHalfEdgeMesh() {
 		var topFaceIndex int
 		topFaceIndex, faceList = faceList[0], faceList[1:]
 
-		tf := qh.mesh.faces[topFaceIndex]
+		tf := &qh.mesh.faces[topFaceIndex]
 		tf.inFaceStack = false
 
 		assertB(tf.pointsOnPositiveSide == nil || len(tf.pointsOnPositiveSide) > 0)
@@ -342,7 +342,7 @@ func (qh *quickHull) createConvexHalfEdgeMesh() {
 		for len(possiblyVisibleFaces) > 0 {
 			fd := possiblyVisibleFaces[len(possiblyVisibleFaces)-1]
 			possiblyVisibleFaces = possiblyVisibleFaces[:len(possiblyVisibleFaces)-1]
-			pvf := qh.mesh.faces[fd.faceIndex]
+			pvf := &qh.mesh.faces[fd.faceIndex]
 			assertB(!pvf.isDisabled())
 
 			if pvf.visibilityCheckedOnIteration == iter {
@@ -358,7 +358,7 @@ func (qh *quickHull) createConvexHalfEdgeMesh() {
 					pvf.horizonEdgesOnCurrentIteration = 0
 					visibleFaces = append(visibleFaces, fd.faceIndex)
 
-					for _, heIndex := range qh.mesh.halfEdgeIndicesOfFace(pvf) {
+					for _, heIndex := range qh.mesh.halfEdgeIndicesOfFace(*pvf) {
 						opp := qh.mesh.halfEdges[heIndex].opp
 						if opp != fd.enteredFromHalfEdge {
 							possiblyVisibleFaces = append(possiblyVisibleFaces, faceData{faceIndex: qh.mesh.halfEdges[opp].face, enteredFromHalfEdge: heIndex})
@@ -400,10 +400,12 @@ func (qh *quickHull) createConvexHalfEdgeMesh() {
 				}
 			}
 
-			if len(tf.pointsOnPositiveSide) == 0 {
-				// TODO: optimize
-				//reclaimToIndexVectorPool(tf.m_pointsOnPositiveSide);
-			}
+			/*
+				TODO: optimize
+				if len(tf.pointsOnPositiveSide) == 0 {
+					reclaimToIndexVectorPool(tf.m_pointsOnPositiveSide);
+				}
+			*/
 			continue
 		}
 
@@ -468,7 +470,7 @@ func (qh *quickHull) createConvexHalfEdgeMesh() {
 			qh.mesh.halfEdges[ca].endVertex = a
 			qh.mesh.halfEdges[bc].endVertex = c
 
-			newFace := qh.mesh.faces[newFaceIdx]
+			newFace := &qh.mesh.faces[newFaceIdx]
 
 			planeNormal := triangleNormal(qh.vertexData[a], qh.vertexData[b], activePoint)
 			newFace.plane = newPlane(planeNormal, activePoint)
@@ -503,7 +505,7 @@ func (qh *quickHull) createConvexHalfEdgeMesh() {
 		}
 		// Increase face stack size if needed
 		for _, newFaceIdx := range qh.newFaceIndices {
-			newFace := qh.mesh.faces[newFaceIdx]
+			newFace := &qh.mesh.faces[newFaceIdx]
 			if newFace.pointsOnPositiveSide != nil {
 				assertB(len(newFace.pointsOnPositiveSide) > 0)
 				if !newFace.inFaceStack {
@@ -522,7 +524,7 @@ func (qh *quickHull) createConvexHalfEdgeMesh() {
 	*/
 }
 
-func (qh *quickHull) buildMesh(pointCloud []r3.Vector, ccw bool, useOriginalIndices bool, epsilon float64) {
+func (qh *quickHull) buildMesh(pointCloud []r3.Vector, useOriginalIndices bool, epsilon float64) {
 	if len(pointCloud) == 0 {
 		// TODO: is ths correct?
 		return
@@ -556,19 +558,27 @@ func (qh *quickHull) buildMesh(pointCloud []r3.Vector, ccw bool, useOriginalIndi
 }
 
 func (qh *quickHull) convexHull(pointCloud []r3.Vector, ccw bool, useOriginalIndices bool, epsilon float64) convexHull {
-	qh.buildMesh(pointCloud, ccw, useOriginalIndices, epsilon)
+	qh.buildMesh(pointCloud, useOriginalIndices, epsilon)
 	return newConvexHull(qh.mesh, qh.vertexData, ccw, useOriginalIndices)
 }
 
 const (
 	epsilonF = 0.0001
-	epsilonD = 0.0000001
+	//epsilonD = 0.0000001
 )
 
 // ConvexHull calculates the convex hull of the given point cloud using the Quickhull algorithm.
 // See: https://en.wikipedia.org/wiki/Quickhull
 func ConvexHull(pointCloud []r3.Vector) []r3.Vector {
 	qh := new(quickHull)
-	hull := qh.convexHull(pointCloud, true, true, epsilonF)
+	hull := qh.convexHull(pointCloud, true, false, epsilonF)
 	return hull.vertices
+}
+
+// ConvexHull calculates the convex hull and returns it as a half-edge-mesh.
+// See also: ConvexHull()
+func ConvexHullAsMesh(pointCloud []r3.Vector) HalfEdgeMesh {
+	qh := new(quickHull)
+	qh.buildMesh(pointCloud, false, epsilonF)
+	return newHalfEdgeMesh(qh.mesh, qh.vertexData)
 }

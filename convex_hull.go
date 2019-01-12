@@ -1,7 +1,7 @@
 package quickhull
 
 import (
-	r3 "github.com/golang/geo/r3"
+	"github.com/golang/geo/r3"
 )
 
 type convexHull struct {
@@ -15,22 +15,22 @@ func newConvexHull(mesh meshBuilder, pointCloud []r3.Vector, ccw bool, useOrigin
 
 	faceProcessed := make([]bool, len(mesh.faces))
 	var faceStack []int
-	vertexIndexMapping := make(map[int]int) // Map vertex indices from original point cloud to the new mesh vertex indices
 	for i, f := range mesh.faces {
-		if f.isDisabled() {
+		if !f.isDisabled() {
 			faceStack = append(faceStack, i)
 			break
 		}
 	}
-	if len(faceStack) > 0 {
+	if len(faceStack) == 0 {
 		return hull
 	}
 
 	finalMeshFaceCount := len(mesh.faces) - len(mesh.disabledFaces)
 	hull.indices = make([]int, finalMeshFaceCount*3)
+	vertexIndexMapping := make(map[int]int) // Map vertex indices from original point cloud to the new mesh vertex indices
 
-	for nFaces := len(faceStack); nFaces > 0; {
-		lastFaceIndex := nFaces - 1
+	for len(faceStack) > 0 {
+		lastFaceIndex := len(faceStack) - 1
 		var top int
 		top, faceStack = faceStack[lastFaceIndex], faceStack[:lastFaceIndex]
 		topFace := mesh.faces[top]
@@ -51,15 +51,19 @@ func newConvexHull(mesh meshBuilder, pointCloud []r3.Vector, ccw bool, useOrigin
 		vertices := mesh.vertexIndicesOfFace(topFace)
 		if !useOriginalIndices {
 			for _, v := range vertices {
-				it, found := vertexIndexMapping[v]
+				//it, found := vertexIndexMapping[v]
+				_, found := vertexIndexMapping[v]
 				if !found {
 					hull.optimizedVertexBuffer = append(hull.optimizedVertexBuffer, pointCloud[v])
 					tmp := len(hull.optimizedVertexBuffer) - 1
 					vertexIndexMapping[v] = tmp
-					v = tmp
-				} else {
+					//v = tmp
+				}
+				/*
+				else {
 					v = it + 1
 				}
+				*/
 			}
 		}
 

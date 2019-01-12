@@ -4,7 +4,7 @@ import (
 	"github.com/golang/geo/r3"
 )
 
-type halfEdgeMesh struct {
+type HalfEdgeMesh struct {
 	vertices  []r3.Vector
 	faces     []face
 	halfEdges []halfEdge
@@ -31,8 +31,8 @@ type face struct {
 	halfEdgeIndex int
 }
 
-func newHalfEdgeMesh(builder meshBuilder, vertices []r3.Vector) halfEdgeMesh {
-	var heMesh halfEdgeMesh
+func newHalfEdgeMesh(builder meshBuilder, vertices []r3.Vector) HalfEdgeMesh {
+	var heMesh HalfEdgeMesh
 
 	faceMapping := make(map[int]int)
 	halfEdgeMapping := make(map[int]int)
@@ -49,7 +49,7 @@ func newHalfEdgeMesh(builder meshBuilder, vertices []r3.Vector) halfEdgeMesh {
 		heIndicies := builder.halfEdgeIndicesOfFace(f)
 		for _, heIndex := range heIndicies {
 			vertexIndex := builder.halfEdges[heIndex].endVertex
-			if _, contains := vertexMapping[vertexIndex]; contains {
+			if _, contains := vertexMapping[vertexIndex]; !contains {
 				heMesh.vertices = append(heMesh.vertices, vertices[vertexIndex])
 				vertexMapping[vertexIndex] = len(heMesh.vertices) - 1
 			}

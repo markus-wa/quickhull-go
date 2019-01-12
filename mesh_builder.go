@@ -16,7 +16,7 @@ func (mb *meshBuilder) addFace() int {
 	if nDisabled := len(mb.disabledFaces); nDisabled > 0 {
 		lastDisabledIndex := nDisabled - 1
 		index := mb.disabledFaces[lastDisabledIndex]
-		f := mb.faces[index]
+		f := &mb.faces[index]
 		assertB(f.isDisabled())
 		assertB(f.pointsOnPositiveSide == nil)
 		f.mostDistantPointDist = 0
@@ -42,15 +42,17 @@ func (mb *meshBuilder) addHalfEdge() int {
 	return len(mb.halfEdges) - 1
 }
 
-func (mb *meshBuilder) disableFace(faceIndex int) []int {
-	f := mb.faces[faceIndex]
+func (mb *meshBuilder) disableFace(faceIndex int) (pointsOnPositiveSide []int) {
+	f := &mb.faces[faceIndex]
 	f.disable()
 	mb.disabledFaces = append(mb.disabledFaces, faceIndex)
-	return f.pointsOnPositiveSide
+	pointsOnPositiveSide = f.pointsOnPositiveSide
+	f.pointsOnPositiveSide = nil
+	return
 }
 
 func (mb *meshBuilder) disableHalfEdge(heIndex int) {
-	he := mb.halfEdges[heIndex]
+	he := &mb.halfEdges[heIndex]
 	he.disable()
 	mb.disabledHalfEdges = append(mb.disabledHalfEdges, heIndex)
 }
