@@ -1,0 +1,11 @@
+{
+  "Enable": [
+    "deadcode",
+    "unconvert",
+    "gofmt -s",
+    "goimports",
+    "misspell",
+    "nakedret",
+    "unparam"
+  ]
+}
