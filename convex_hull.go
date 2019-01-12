@@ -60,9 +60,9 @@ func newConvexHull(mesh meshBuilder, pointCloud []r3.Vector, ccw bool, useOrigin
 					//v = tmp
 				}
 				/*
-				else {
-					v = it + 1
-				}
+					else {
+						v = it + 1
+					}
 				*/
 			}
 		}

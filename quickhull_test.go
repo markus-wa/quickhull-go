@@ -10,23 +10,19 @@ import (
 
 // Simple 2D test (all points on a plane)
 func TestConvexHull2D(t *testing.T) {
-	// Construct a point cloud that looks roughly like this.
+	// Construct a square as 'point cloud' that looks roughly like this.
 	// All points are on a single plane (Z=0).
-	// D should be inside the Convex Hull.
+	// E should be inside the Convex Hull.
 	//
-	//         C
-	//       /   \
-	//     /   D   \
-	//   /           \
-	// A - - - - - - - B
+	// C - - - - - - D
+	// |             |
+	// |             |
+	// |      E      |
+	// |             |
+	// |             |
+	// A - - - - - - B
 	//
 	pointCloud := []r3.Vector{
-		{X: 1, Y: 2, Z: 1},
-		{X: 4, Y: 7, Z: 1},
-		{X: 7, Y: 2, Z: 1},
-		{X: 4, Y: 4, Z: 1}, // This point is inside the hull
-	}
-	pointCloud = []r3.Vector{
 		{X: 0, Y: 0, Z: 1},
 		{X: 0, Y: 10, Z: 1},
 		{X: 10, Y: 0, Z: 1},
@@ -35,11 +31,6 @@ func TestConvexHull2D(t *testing.T) {
 	}
 
 	expectedHull := []r3.Vector{
-		{X: 1, Y: 2, Z: 0},
-		{X: 4, Y: 7, Z: 0},
-		{X: 7, Y: 2, Z: 0},
-	}
-	expectedHull = []r3.Vector{
 		{X: 0, Y: 0, Z: 1},
 		{X: 0, Y: 10, Z: 1},
 		{X: 10, Y: 0, Z: 1},

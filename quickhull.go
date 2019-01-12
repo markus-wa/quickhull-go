@@ -524,7 +524,7 @@ func (qh *quickHull) createConvexHalfEdgeMesh() {
 	*/
 }
 
-func (qh *quickHull) buildMesh(pointCloud []r3.Vector, useOriginalIndices bool, epsilon float64) {
+func (qh *quickHull) buildMesh(pointCloud []r3.Vector, epsilon float64) {
 	if len(pointCloud) == 0 {
 		// TODO: is ths correct?
 		return
@@ -558,7 +558,7 @@ func (qh *quickHull) buildMesh(pointCloud []r3.Vector, useOriginalIndices bool, 
 }
 
 func (qh *quickHull) convexHull(pointCloud []r3.Vector, ccw bool, useOriginalIndices bool, epsilon float64) convexHull {
-	qh.buildMesh(pointCloud, useOriginalIndices, epsilon)
+	qh.buildMesh(pointCloud, epsilon)
 	return newConvexHull(qh.mesh, qh.vertexData, ccw, useOriginalIndices)
 }
 
@@ -579,6 +579,6 @@ func ConvexHull(pointCloud []r3.Vector) []r3.Vector {
 // See also: ConvexHull()
 func ConvexHullAsMesh(pointCloud []r3.Vector) HalfEdgeMesh {
 	qh := new(quickHull)
-	qh.buildMesh(pointCloud, false, epsilonF)
+	qh.buildMesh(pointCloud, epsilonF)
 	return newHalfEdgeMesh(qh.mesh, qh.vertexData)
 }

@@ -25,7 +25,7 @@ func (mb *meshBuilder) addFace() int {
 		return index
 	}
 
-	mb.faces = append(mb.faces, meshBuilderFace{})
+	mb.faces = append(mb.faces, newMeshBuilderFace())
 	return len(mb.faces) - 1
 }
 
