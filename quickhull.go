@@ -20,7 +20,7 @@ func ConvexHull(pointCloud []r3.Vector) []r3.Vector {
 	return hull.vertices
 }
 
-// ConvexHull calculates the convex hull and returns it as a half-edge-mesh.
+// ConvexHullAsMesh calculates the convex hull and returns it as a half-edge-mesh.
 // See also: ConvexHull()
 func ConvexHullAsMesh(pointCloud []r3.Vector) HalfEdgeMesh {
 	qh := new(quickHull)
