@@ -11,6 +11,7 @@ This is different from Google's S2 Geometry implementation because it works in â
 [![codecov](https://codecov.io/gh/markus-wa/quickhull-go/branch/master/graph/badge.svg)](https://codecov.io/gh/markus-wa/quickhull-go)
 [![Go Report](https://goreportcard.com/badge/github.com/markus-wa/quickhull-go)](https://goreportcard.com/report/github.com/markus-wa/quickhull-go)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](LICENSE.md)
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fmarkus-wa%2Fquickhull-go.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fmarkus-wa%2Fquickhull-go?ref=badge_shield)
 
 ## Go Get
 
@@ -19,3 +20,7 @@ This is different from Google's S2 Geometry implementation because it works in â
 ## Example
 
 	TODO
+
+
+## License
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fmarkus-wa%2Fquickhull-go.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fmarkus-wa%2Fquickhull-go?ref=badge_large)
