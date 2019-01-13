@@ -1,0 +1,9 @@
+run:
+  deadline: 5m
+linters:
+  enable-all: true
+  disable:
+    - gochecknoinits
+    - gochecknoglobals
+    - gocyclo
+    - lll
