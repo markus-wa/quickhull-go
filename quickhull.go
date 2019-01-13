@@ -332,13 +332,13 @@ func (qh *quickHull) createConvexHalfEdgeMesh() {
 func (qh *quickHull) initialTetrahedron() meshBuilder {
 	nVertices := len(qh.vertexData)
 
-	// If we have at most 4 points, just return p1 degenerate tetrahedron:
-	if nVertices <= 4 {
+	// If we have at most 3 points, just return p1 degenerate tetrahedron:
+	if nVertices <= 3 {
 		v := [4]int{
 			0,
 			int(math.Min(1, float64(nVertices-1))),
 			int(math.Min(2, float64(nVertices-1))),
-			int(math.Min(3, float64(nVertices-1))),
+			nVertices - 1,
 		}
 
 		n := triangleNormal(qh.vertexData[v[0]], qh.vertexData[v[1]], qh.vertexData[v[2]])
