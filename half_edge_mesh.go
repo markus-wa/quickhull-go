@@ -4,31 +4,37 @@ import (
 	"github.com/golang/geo/r3"
 )
 
+// HalfEdgeMesh is a mesh consisting of half edges.
+// See: https://www.openmesh.org/media/Documentations/OpenMesh-6.3-Documentation/a00010.html
 type HalfEdgeMesh struct {
-	vertices  []r3.Vector
-	faces     []face
-	halfEdges []halfEdge
+	Vertices  []r3.Vector
+	Faces     []Face
+	HalfEdges []HalfEdge
 }
 
-type halfEdge struct {
-	endVertex int
-	opp       int
-	face      int
-	next      int
+// HalfEdge is a half edge.
+// See: https://www.openmesh.org/media/Documentations/OpenMesh-6.3-Documentation/a00010.html
+type HalfEdge struct {
+	EndVertex int // Index of end vertex
+	Opp       int // Index of opposite HalfEdge
+	Face      int // Index of Face it belongs to
+	Next      int // Index of next HalfEdge
 }
 
 const disabledInt = ^int(0)
 
-func (he *halfEdge) disable() {
-	he.endVertex = disabledInt
+func (he *HalfEdge) disable() {
+	he.EndVertex = disabledInt
 }
 
-func (he halfEdge) isDisabled() bool {
-	return he.endVertex == disabledInt
+func (he HalfEdge) isDisabled() bool {
+	return he.EndVertex == disabledInt
 }
 
-type face struct {
-	halfEdgeIndex int
+// Face of a half edge.
+// See: https://www.openmesh.org/media/Documentations/OpenMesh-6.3-Documentation/a00010.html
+type Face struct {
+	HalfEdge int // Index of a bounding HalfEdge
 }
 
 func newHalfEdgeMesh(builder meshBuilder, vertices []r3.Vector) HalfEdgeMesh {
@@ -43,15 +49,15 @@ func newHalfEdgeMesh(builder meshBuilder, vertices []r3.Vector) HalfEdgeMesh {
 			continue
 		}
 
-		heMesh.faces = append(heMesh.faces, face{halfEdgeIndex: f.halfEdgeIndex})
-		faceMapping[i] = len(heMesh.faces) - 1
+		heMesh.Faces = append(heMesh.Faces, Face{HalfEdge: f.halfEdgeIndex})
+		faceMapping[i] = len(heMesh.Faces) - 1
 
 		heIndicies := builder.halfEdgeIndicesOfFace(f)
 		for _, heIndex := range heIndicies {
-			vertexIndex := builder.halfEdges[heIndex].endVertex
+			vertexIndex := builder.halfEdges[heIndex].EndVertex
 			if _, contains := vertexMapping[vertexIndex]; !contains {
-				heMesh.vertices = append(heMesh.vertices, vertices[vertexIndex])
-				vertexMapping[vertexIndex] = len(heMesh.vertices) - 1
+				heMesh.Vertices = append(heMesh.Vertices, vertices[vertexIndex])
+				vertexMapping[vertexIndex] = len(heMesh.Vertices) - 1
 			}
 		}
 	}
@@ -61,21 +67,21 @@ func newHalfEdgeMesh(builder meshBuilder, vertices []r3.Vector) HalfEdgeMesh {
 			continue
 		}
 
-		heMesh.halfEdges = append(heMesh.halfEdges, he)
-		halfEdgeMapping[i] = len(heMesh.halfEdges) - 1
+		heMesh.HalfEdges = append(heMesh.HalfEdges, he)
+		halfEdgeMapping[i] = len(heMesh.HalfEdges) - 1
 	}
 
-	for i := range heMesh.faces {
-		_, contains := halfEdgeMapping[heMesh.faces[i].halfEdgeIndex]
+	for i := range heMesh.Faces {
+		_, contains := halfEdgeMapping[heMesh.Faces[i].HalfEdge]
 		assertB(contains)
-		heMesh.faces[i].halfEdgeIndex = halfEdgeMapping[heMesh.faces[i].halfEdgeIndex]
+		heMesh.Faces[i].HalfEdge = halfEdgeMapping[heMesh.Faces[i].HalfEdge]
 	}
 
-	for i := range heMesh.halfEdges {
-		heMesh.halfEdges[i].face = faceMapping[heMesh.halfEdges[i].face]
-		heMesh.halfEdges[i].opp = halfEdgeMapping[heMesh.halfEdges[i].opp]
-		heMesh.halfEdges[i].next = halfEdgeMapping[heMesh.halfEdges[i].next]
-		heMesh.halfEdges[i].endVertex = vertexMapping[heMesh.halfEdges[i].endVertex]
+	for i := range heMesh.HalfEdges {
+		heMesh.HalfEdges[i].Face = faceMapping[heMesh.HalfEdges[i].Face]
+		heMesh.HalfEdges[i].Opp = halfEdgeMapping[heMesh.HalfEdges[i].Opp]
+		heMesh.HalfEdges[i].Next = halfEdgeMapping[heMesh.HalfEdges[i].Next]
+		heMesh.HalfEdges[i].EndVertex = vertexMapping[heMesh.HalfEdges[i].EndVertex]
 	}
 
 	return heMesh

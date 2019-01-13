@@ -121,9 +121,9 @@ func TestHalfEdgeOutput(t *testing.T) {
 
 	mesh := ConvexHullAsMesh(pointCloud)
 
-	assert.Equal(t, 12, len(mesh.faces))
-	assert.Equal(t, 36, len(mesh.halfEdges))
-	assert.Equal(t, 8, len(mesh.vertices))
+	assert.Equal(t, 12, len(mesh.Faces))
+	assert.Equal(t, 36, len(mesh.HalfEdges))
+	assert.Equal(t, 8, len(mesh.Vertices))
 }
 
 func randF64(min, max float64) float64 {

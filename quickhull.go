@@ -204,7 +204,7 @@ func (qh *quickHull) initialTetrahedron() meshBuilder {
 			qh.vertexData = qh.planarPointCloudTemp
 		}
 
-		// Enforce CCW orientation (if user prefers clockwise orientation, swap two vertices in each triangle when final mesh is created)
+		// Enforce CCW orientation (if user prefers clockwise orientation, swap two Vertices in each triangle when final mesh is created)
 		triPlane := newPlane(n, baseTriangleVertices[0])
 		if triPlane.isPointOnPositiveSide(qh.vertexData[maxI]) {
 			baseTriangle[0], baseTriangle[1] = baseTriangle[1], baseTriangle[0]
@@ -222,7 +222,7 @@ func (qh *quickHull) initialTetrahedron() meshBuilder {
 		mesh.faces[i].plane = newPlane(n, va)
 	}
 
-	// Finally we assign a face for each vertex outside the tetrahedron (vertices inside the tetrahedron have no role anymore)
+	// Finally we assign a Face for each vertex outside the tetrahedron (Vertices inside the tetrahedron have no role anymore)
 	for i := 0; i < nVertices; i++ {
 		for j := range mesh.faces {
 			if qh.addPointToFace(&mesh.faces[j], i) {
@@ -238,10 +238,10 @@ func (qh *quickHull) initialTetrahedron() meshBuilder {
 func (qh quickHull) reorderHorizontalEdges(horizontalEdges []int) bool {
 	nEdges := len(horizontalEdges)
 	for i := 0; i < nEdges-1; i++ {
-		endVertex := qh.mesh.halfEdges[horizontalEdges[i]].endVertex
+		endVertex := qh.mesh.halfEdges[horizontalEdges[i]].EndVertex
 		var foundNext bool
 		for j := i + 1; j < nEdges; j++ {
-			beginVertex := qh.mesh.halfEdges[qh.mesh.halfEdges[horizontalEdges[j]].opp].endVertex
+			beginVertex := qh.mesh.halfEdges[qh.mesh.halfEdges[horizontalEdges[j]].Opp].EndVertex
 			if beginVertex == endVertex {
 				horizontalEdges[i+1], horizontalEdges[j] = horizontalEdges[j], horizontalEdges[i+1]
 				foundNext = true
@@ -255,12 +255,12 @@ func (qh quickHull) reorderHorizontalEdges(horizontalEdges []int) bool {
 	return true
 }
 
-// Associates a point with a face if the point resides on the positive side of the plane. Returns true if the points was on the positive side.
+// Associates a point with a Face if the point resides on the positive side of the plane. Returns true if the points was on the positive side.
 func (qh *quickHull) addPointToFace(face *meshBuilderFace, pointIndex int) bool {
 	d := signedDistanceToPlane(qh.vertexData[pointIndex], face.plane)
 	if d > 0 && d*d > qh.epsilonSquared*face.plane.sqrNLength {
 		/* TODO: optimize
-		if face.pointsOnPositiveSide == nil {
+		if Face.pointsOnPositiveSide == nil {
 			f.m_pointsOnPositiveSide = std::move(getIndexVectorFromPool());
 		}
 		*/
@@ -288,7 +288,7 @@ func (qh *quickHull) createConvexHalfEdgeMesh() {
 
 	type faceData struct {
 		faceIndex           int
-		enteredFromHalfEdge int // If the face turns out not to be visible, this half edge will be marked as horizon edge
+		enteredFromHalfEdge int // If the Face turns out not to be visible, this half edge will be marked as horizon edge
 	}
 
 	var possiblyVisibleFaces []faceData
@@ -306,12 +306,12 @@ func (qh *quickHull) createConvexHalfEdgeMesh() {
 		}
 	}
 
-	// Process faces until the face list is empty.
+	// Process Faces until the Face list is empty.
 	iter := 0
 	for len(faceList) > 0 {
 		iter++
 		if iter == maxInt {
-			// Visible face traversal marks visited faces with iteration counter (to mark that the face has been visited on this iteration) and the max value represents unvisited faces. At this point we have to reset iteration counter. This shouldn't be an
+			// Visible Face traversal marks visited Faces with iteration counter (to mark that the Face has been visited on this iteration) and the max value represents unvisited Faces. At this point we have to reset iteration counter. This shouldn't be an
 			// issue on 64 bit machines.
 			iter = 0
 		}
@@ -336,8 +336,8 @@ func (qh *quickHull) createConvexHalfEdgeMesh() {
 		visibleFaces = visibleFaces[:0]
 		possiblyVisibleFaces = possiblyVisibleFaces[:0]
 
-		// Find out the faces that have our active point on their positive side (these are the "visible faces").
-		// The face on top of the stack of course is one of them. At the same time, we create a list of horizon edges.
+		// Find out the Faces that have our active point on their positive side (these are the "visible Faces").
+		// The Face on top of the stack of course is one of them. At the same time, we create a list of horizon edges.
 		possiblyVisibleFaces = append(possiblyVisibleFaces, faceData{faceIndex: topFaceIndex, enteredFromHalfEdge: maxInt})
 		for len(possiblyVisibleFaces) > 0 {
 			fd := possiblyVisibleFaces[len(possiblyVisibleFaces)-1]
@@ -359,9 +359,9 @@ func (qh *quickHull) createConvexHalfEdgeMesh() {
 					visibleFaces = append(visibleFaces, fd.faceIndex)
 
 					for _, heIndex := range qh.mesh.halfEdgeIndicesOfFace(*pvf) {
-						opp := qh.mesh.halfEdges[heIndex].opp
+						opp := qh.mesh.halfEdges[heIndex].Opp
 						if opp != fd.enteredFromHalfEdge {
-							possiblyVisibleFaces = append(possiblyVisibleFaces, faceData{faceIndex: qh.mesh.halfEdges[opp].face, enteredFromHalfEdge: heIndex})
+							possiblyVisibleFaces = append(possiblyVisibleFaces, faceData{faceIndex: qh.mesh.halfEdges[opp].Face, enteredFromHalfEdge: heIndex})
 						}
 					}
 					continue
@@ -369,12 +369,12 @@ func (qh *quickHull) createConvexHalfEdgeMesh() {
 				assertB(fd.faceIndex != topFaceIndex)
 			}
 
-			// The face is not visible. Therefore, the halfedge we came from is part of the horizon edge.
+			// The Face is not visible. Therefore, the halfedge we came from is part of the horizon edge.
 			pvf.isVisibleFaceOnCurrentIteration = false
 			horizontalEdges = append(horizontalEdges, fd.enteredFromHalfEdge)
 
-			// Store which half edge is the horizon edge. The other half edges of the face will not be part of the final mesh so their data slots can by recycled.
-			halfEdges := qh.mesh.halfEdgeIndicesOfFace(qh.mesh.faces[qh.mesh.halfEdges[fd.enteredFromHalfEdge].face])
+			// Store which half edge is the horizon edge. The other half edges of the Face will not be part of the final mesh so their data slots can by recycled.
+			halfEdges := qh.mesh.halfEdgeIndicesOfFace(qh.mesh.faces[qh.mesh.halfEdges[fd.enteredFromHalfEdge].Face])
 			var ind byte
 			if halfEdges[0] != fd.enteredFromHalfEdge {
 				if halfEdges[1] == fd.enteredFromHalfEdge {
@@ -383,7 +383,7 @@ func (qh *quickHull) createConvexHalfEdgeMesh() {
 					ind = 2
 				}
 			}
-			qh.mesh.faces[qh.mesh.halfEdges[fd.enteredFromHalfEdge].face].horizonEdgesOnCurrentIteration |= 1 << ind
+			qh.mesh.faces[qh.mesh.halfEdges[fd.enteredFromHalfEdge].Face].horizonEdgesOnCurrentIteration |= 1 << ind
 		}
 
 		nHorizontalEdges := len(horizontalEdges)
@@ -409,8 +409,8 @@ func (qh *quickHull) createConvexHalfEdgeMesh() {
 			continue
 		}
 
-		// Except for the horizon edges, all half edges of the visible faces can be marked as disabled. Their data slots will be reused.
-		// The faces will be disabled as well, but we need to remember the points that were on the positive side of them - therefore
+		// Except for the horizon edges, all half edges of the visible Faces can be marked as disabled. Their data slots will be reused.
+		// The Faces will be disabled as well, but we need to remember the points that were on the positive side of them - therefore
 		// we save pointers to them.
 		qh.newFaceIndices = qh.newFaceIndices[:0]
 		qh.newHalfEdgeIndices = qh.newHalfEdgeIndices[:0]
@@ -432,8 +432,8 @@ func (qh *quickHull) createConvexHalfEdgeMesh() {
 					}
 				}
 			}
-			// Disable the face, but retain pointer to the points that were on the positive side of it. We need to assign those points
-			// to the new faces we create shortly.
+			// Disable the Face, but retain pointer to the points that were on the positive side of it. We need to assign those points
+			// to the new Faces we create shortly.
 			t := qh.mesh.disableFace(faceIdx)
 			if t != nil {
 				assertB(len(t) > 0)
@@ -447,7 +447,7 @@ func (qh *quickHull) createConvexHalfEdgeMesh() {
 				qh.newHalfEdgeIndices = append(qh.newHalfEdgeIndices, qh.mesh.addHalfEdge())
 			}
 		}
-		// Create new faces using the edgeloop
+		// Create new Faces using the edgeloop
 		for i := 0; i < nHorizontalEdges; i++ {
 			ab := horizontalEdges[i]
 
@@ -459,16 +459,16 @@ func (qh *quickHull) createConvexHalfEdgeMesh() {
 
 			ca, bc := qh.newHalfEdgeIndices[2*i+0], qh.newHalfEdgeIndices[2*i+1]
 
-			qh.mesh.halfEdges[ab].next = bc
-			qh.mesh.halfEdges[bc].next = ca
-			qh.mesh.halfEdges[ca].next = ab
+			qh.mesh.halfEdges[ab].Next = bc
+			qh.mesh.halfEdges[bc].Next = ca
+			qh.mesh.halfEdges[ca].Next = ab
 
-			qh.mesh.halfEdges[bc].face = newFaceIdx
-			qh.mesh.halfEdges[ca].face = newFaceIdx
-			qh.mesh.halfEdges[ab].face = newFaceIdx
+			qh.mesh.halfEdges[bc].Face = newFaceIdx
+			qh.mesh.halfEdges[ca].Face = newFaceIdx
+			qh.mesh.halfEdges[ab].Face = newFaceIdx
 
-			qh.mesh.halfEdges[ca].endVertex = a
-			qh.mesh.halfEdges[bc].endVertex = c
+			qh.mesh.halfEdges[ca].EndVertex = a
+			qh.mesh.halfEdges[bc].EndVertex = c
 
 			newFace := &qh.mesh.faces[newFaceIdx]
 
@@ -482,8 +482,8 @@ func (qh *quickHull) createConvexHalfEdgeMesh() {
 			} else {
 				idx = 2*nHorizontalEdges - 1
 			}
-			qh.mesh.halfEdges[ca].opp = qh.newHalfEdgeIndices[idx]
-			qh.mesh.halfEdges[bc].opp = qh.newHalfEdgeIndices[((i+1)*2)%(nHorizontalEdges*2)]
+			qh.mesh.halfEdges[ca].Opp = qh.newHalfEdgeIndices[idx]
+			qh.mesh.halfEdges[bc].Opp = qh.newHalfEdgeIndices[((i+1)*2)%(nHorizontalEdges*2)]
 		}
 
 		for _, disabledPoints := range qh.disabledFacePointVectors {
@@ -503,7 +503,7 @@ func (qh *quickHull) createConvexHalfEdgeMesh() {
 			reclaimToIndexVectorPool(disabledPoints);
 			*/
 		}
-		// Increase face stack size if needed
+		// Increase Face stack size if needed
 		for _, newFaceIdx := range qh.newFaceIndices {
 			newFace := &qh.mesh.faces[newFaceIdx]
 			if newFace.pointsOnPositiveSide != nil {
@@ -548,8 +548,8 @@ func (qh *quickHull) buildMesh(pointCloud []r3.Vector, epsilon float64) {
 	if qh.planar {
 		extraPointIdx := len(qh.planarPointCloudTemp) - 1
 		for i := range qh.mesh.halfEdges {
-			if qh.mesh.halfEdges[i].endVertex == extraPointIdx {
-				qh.mesh.halfEdges[i].endVertex = 0
+			if qh.mesh.halfEdges[i].EndVertex == extraPointIdx {
+				qh.mesh.halfEdges[i].EndVertex = 0
 			}
 		}
 		qh.vertexData = pointCloud

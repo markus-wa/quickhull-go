@@ -3,10 +3,10 @@ package quickhull
 type meshBuilder struct {
 	// Mesh data
 	faces     []meshBuilderFace
-	halfEdges []halfEdge
+	halfEdges []HalfEdge
 
-	// When the mesh is modified and faces and half edges are removed from it, we do not actually remove them from the container vectors.
-	// Insted, they are marked as disabled which means that the indices can be reused when we need to add new faces and half edges to the mesh.
+	// When the mesh is modified and Faces and half edges are removed from it, we do not actually remove them from the container vectors.
+	// Insted, they are marked as disabled which means that the indices can be reused when we need to add new Faces and half edges to the mesh.
 	// We store the free indices in the following vectors.
 	disabledFaces     []int
 	disabledHalfEdges []int
@@ -38,7 +38,7 @@ func (mb *meshBuilder) addHalfEdge() int {
 		return index
 	}
 
-	mb.halfEdges = append(mb.halfEdges, halfEdge{})
+	mb.halfEdges = append(mb.halfEdges, HalfEdge{})
 	return len(mb.halfEdges) - 1
 }
 
@@ -60,20 +60,20 @@ func (mb *meshBuilder) disableHalfEdge(heIndex int) {
 func (mb *meshBuilder) vertexIndicesOfFace(f meshBuilderFace) [3]int {
 	var v [3]int
 	he := mb.halfEdges[f.halfEdgeIndex]
-	v[0] = he.endVertex
-	he = mb.halfEdges[he.next]
-	v[1] = he.endVertex
-	he = mb.halfEdges[he.next]
-	v[2] = he.endVertex
+	v[0] = he.EndVertex
+	he = mb.halfEdges[he.Next]
+	v[1] = he.EndVertex
+	he = mb.halfEdges[he.Next]
+	v[2] = he.EndVertex
 	return v
 }
 
-func (mb *meshBuilder) vertexIndicesOfHalfEdge(he halfEdge) [2]int {
-	return [2]int{mb.halfEdges[he.opp].endVertex, he.endVertex}
+func (mb *meshBuilder) vertexIndicesOfHalfEdge(he HalfEdge) [2]int {
+	return [2]int{mb.halfEdges[he.Opp].EndVertex, he.EndVertex}
 }
 func (mb *meshBuilder) halfEdgeIndicesOfFace(f meshBuilderFace) [3]int {
-	second := mb.halfEdges[f.halfEdgeIndex].next
-	return [3]int{f.halfEdgeIndex, second, mb.halfEdges[second].next}
+	second := mb.halfEdges[f.halfEdgeIndex].Next
+	return [3]int{f.halfEdgeIndex, second, mb.halfEdges[second].Next}
 }
 
 // Create a mesh with initial tetrahedron ABCD. Dot product of AB with the normal of triangle ABC should be negative.
@@ -81,103 +81,103 @@ func newMeshBuilder(a, b, c, d int) meshBuilder {
 	// Create halfedges
 	var mb meshBuilder
 
-	ab := halfEdge{
-		endVertex: b,
-		opp:       6,
-		face:      0,
-		next:      1,
+	ab := HalfEdge{
+		EndVertex: b,
+		Opp:       6,
+		Face:      0,
+		Next:      1,
 	}
 	mb.halfEdges = append(mb.halfEdges, ab)
 
-	bc := halfEdge{
-		endVertex: c,
-		opp:       9,
-		face:      0,
-		next:      2,
+	bc := HalfEdge{
+		EndVertex: c,
+		Opp:       9,
+		Face:      0,
+		Next:      2,
 	}
 	mb.halfEdges = append(mb.halfEdges, bc)
 
-	ca := halfEdge{
-		endVertex: a,
-		opp:       3,
-		face:      0,
-		next:      0,
+	ca := HalfEdge{
+		EndVertex: a,
+		Opp:       3,
+		Face:      0,
+		Next:      0,
 	}
 	mb.halfEdges = append(mb.halfEdges, ca)
 
-	ac := halfEdge{
-		endVertex: c,
-		opp:       2,
-		face:      1,
-		next:      4,
+	ac := HalfEdge{
+		EndVertex: c,
+		Opp:       2,
+		Face:      1,
+		Next:      4,
 	}
 	mb.halfEdges = append(mb.halfEdges, ac)
 
-	cd := halfEdge{
-		endVertex: d,
-		opp:       11,
-		face:      1,
-		next:      5,
+	cd := HalfEdge{
+		EndVertex: d,
+		Opp:       11,
+		Face:      1,
+		Next:      5,
 	}
 	mb.halfEdges = append(mb.halfEdges, cd)
 
-	da := halfEdge{
-		endVertex: a,
-		opp:       7,
-		face:      1,
-		next:      3,
+	da := HalfEdge{
+		EndVertex: a,
+		Opp:       7,
+		Face:      1,
+		Next:      3,
 	}
 	mb.halfEdges = append(mb.halfEdges, da)
 
-	ba := halfEdge{
-		endVertex: a,
-		opp:       0,
-		face:      2,
-		next:      7,
+	ba := HalfEdge{
+		EndVertex: a,
+		Opp:       0,
+		Face:      2,
+		Next:      7,
 	}
 	mb.halfEdges = append(mb.halfEdges, ba)
 
-	ad := halfEdge{
-		endVertex: d,
-		opp:       5,
-		face:      2,
-		next:      8,
+	ad := HalfEdge{
+		EndVertex: d,
+		Opp:       5,
+		Face:      2,
+		Next:      8,
 	}
 	mb.halfEdges = append(mb.halfEdges, ad)
 
-	db := halfEdge{
-		endVertex: b,
-		opp:       10,
-		face:      2,
-		next:      6,
+	db := HalfEdge{
+		EndVertex: b,
+		Opp:       10,
+		Face:      2,
+		Next:      6,
 	}
 	mb.halfEdges = append(mb.halfEdges, db)
 
-	cb := halfEdge{
-		endVertex: b,
-		opp:       1,
-		face:      3,
-		next:      10,
+	cb := HalfEdge{
+		EndVertex: b,
+		Opp:       1,
+		Face:      3,
+		Next:      10,
 	}
 	mb.halfEdges = append(mb.halfEdges, cb)
 
-	bd := halfEdge{
-		endVertex: d,
-		opp:       8,
-		face:      3,
-		next:      11,
+	bd := HalfEdge{
+		EndVertex: d,
+		Opp:       8,
+		Face:      3,
+		Next:      11,
 	}
 	mb.halfEdges = append(mb.halfEdges, bd)
 
-	dc := halfEdge{
-		endVertex: c,
-		opp:       4,
-		face:      3,
-		next:      9,
+	dc := HalfEdge{
+		EndVertex: c,
+		Opp:       4,
+		Face:      3,
+		Next:      9,
 	}
 	mb.halfEdges = append(mb.halfEdges, dc)
 
-	// Create faces
+	// Create Faces
 	abc := meshBuilderFace{
 		halfEdgeIndex: 0,
 	}
@@ -216,7 +216,7 @@ type meshBuilderFace struct {
 	visibilityCheckedOnIteration    int
 	isVisibleFaceOnCurrentIteration bool
 	inFaceStack                     bool
-	horizonEdgesOnCurrentIteration  byte // Bit for each half edge assigned to this face, each being 0 or 1 depending on whether the edge belongs to horizon edge
+	horizonEdgesOnCurrentIteration  byte // Bit for each half edge assigned to this Face, each being 0 or 1 depending on whether the edge belongs to horizon edge
 	pointsOnPositiveSide            []int
 }
 

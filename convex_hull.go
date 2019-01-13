@@ -41,7 +41,7 @@ func newConvexHull(mesh meshBuilder, pointCloud []r3.Vector, ccw bool, useOrigin
 
 		faceProcessed[top] = true
 		halfEdges := mesh.halfEdgeIndicesOfFace(topFace)
-		adjacent := []int{mesh.halfEdges[mesh.halfEdges[halfEdges[0]].opp].face, mesh.halfEdges[mesh.halfEdges[halfEdges[1]].opp].face, mesh.halfEdges[mesh.halfEdges[halfEdges[2]].opp].face}
+		adjacent := []int{mesh.halfEdges[mesh.halfEdges[halfEdges[0]].Opp].Face, mesh.halfEdges[mesh.halfEdges[halfEdges[1]].Opp].Face, mesh.halfEdges[mesh.halfEdges[halfEdges[2]].Opp].Face}
 		for _, a := range adjacent {
 			if !faceProcessed[a] && !mesh.faces[a].isDisabled() {
 				faceStack = append(faceStack, a)
