@@ -12,18 +12,20 @@ import (
 func TestConvexHull2DSquare(t *testing.T) {
 	// Construct a square as 'point cloud' that looks roughly like this.
 	// All points are on a single plane (Z=1).
-	// E should be inside the Convex Hull.
+	// E is on the border but should not be part of the Convex Hull.
+	// F should be inside the Convex Hull.
 	//
 	// C - - - - - - D
 	// |             |
 	// |             |
-	// |      E      |
+	// E      F      |
 	// |             |
 	// |             |
 	// A - - - - - - B
 	//
 	pointCloud := []r3.Vector{
 		{X: 0, Y: 0, Z: 1},
+		{X: 0, Y: 5, Z: 1},
 		{X: 0, Y: 10, Z: 1},
 		{X: 10, Y: 0, Z: 1},
 		{X: 10, Y: 10, Z: 1},
