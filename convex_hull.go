@@ -34,7 +34,7 @@ func newConvexHull(mesh meshBuilder, pointCloud []r3.Vector, ccw bool, useOrigin
 		var top int
 		top, faceStack = faceStack[lastFaceIndex], faceStack[:lastFaceIndex]
 		topFace := mesh.faces[top]
-		assertB(!topFace.isDisabled())
+		assertTrue(!topFace.isDisabled())
 		if faceProcessed[top] {
 			continue
 		}

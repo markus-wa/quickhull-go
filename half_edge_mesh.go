@@ -73,7 +73,7 @@ func newHalfEdgeMesh(builder meshBuilder, vertices []r3.Vector) HalfEdgeMesh {
 
 	for i := range heMesh.Faces {
 		_, contains := halfEdgeMapping[heMesh.Faces[i].HalfEdge]
-		assertB(contains)
+		assertTrue(contains)
 		heMesh.Faces[i].HalfEdge = halfEdgeMapping[heMesh.Faces[i].HalfEdge]
 	}
 

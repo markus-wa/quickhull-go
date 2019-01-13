@@ -1,7 +1,7 @@
 package quickhull
 
 import (
-	r3 "github.com/golang/geo/r3"
+	"github.com/golang/geo/r3"
 )
 
 type plane struct {

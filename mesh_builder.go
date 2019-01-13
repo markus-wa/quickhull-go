@@ -17,8 +17,8 @@ func (mb *meshBuilder) addFace() int {
 		lastDisabledIndex := nDisabled - 1
 		index := mb.disabledFaces[lastDisabledIndex]
 		f := &mb.faces[index]
-		assertB(f.isDisabled())
-		assertB(f.pointsOnPositiveSide == nil)
+		assertTrue(f.isDisabled())
+		assertTrue(f.pointsOnPositiveSide == nil)
 		f.mostDistantPointDist = 0
 		mb.disabledFaces = mb.disabledFaces[:lastDisabledIndex]
 
@@ -199,13 +199,6 @@ func newMeshBuilder(a, b, c, d int) meshBuilder {
 	mb.faces = append(mb.faces, cbd)
 
 	return mb
-}
-
-func assertB(b bool) {
-	// TODO: delete assertion?
-	if !b {
-		panic("Assertion failed")
-	}
 }
 
 type meshBuilderFace struct {
