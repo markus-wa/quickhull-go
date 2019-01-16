@@ -1,7 +1,6 @@
 package quickhull
 
 import (
-	"fmt"
 	"log"
 	"math"
 
@@ -319,8 +318,6 @@ func (qh *quickHull) createConvexHalfEdgeMesh() {
 			}
 		}
 	}
-
-	fmt.Println()
 
 	/* TODO: optimize
 	// Cleanup
