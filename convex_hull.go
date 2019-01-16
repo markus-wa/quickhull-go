@@ -14,7 +14,7 @@ func (hull ConvexHull) Triangles() [][3]r3.Vector {
 	triangles := make([][3]r3.Vector, len(hull.Indices)/3)
 
 	for i, idx := range hull.Indices {
-		triangles[i/3][i&3] = hull.Vertices[idx]
+		triangles[i/3][i%3] = hull.Vertices[idx]
 	}
 
 	return triangles
@@ -64,11 +64,11 @@ func newConvexHull(mesh meshBuilder, pointCloud []r3.Vector, ccw bool, useOrigin
 				it, found := vertexIndexMapping[v]
 				if !found {
 					hull.optimizedVertexBuffer = append(hull.optimizedVertexBuffer, pointCloud[v])
-					tmp := len(hull.optimizedVertexBuffer) - 1
-					vertexIndexMapping[v] = tmp
-					vertices[i] = tmp
+					addedIdx := len(hull.optimizedVertexBuffer) - 1
+					vertexIndexMapping[v] = addedIdx
+					vertices[i] = addedIdx
 				} else {
-					vertices[i] = it + 1
+					vertices[i] = it
 				}
 			}
 		}
