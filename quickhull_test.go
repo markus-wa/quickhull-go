@@ -39,7 +39,7 @@ func TestConvexHull2DSquare(t *testing.T) {
 		{X: 10, Y: 10, Z: 1},
 	}
 
-	assert.ElementsMatch(t, expectedHull, ConvexHull(pointCloud), "ConvexHull should be as expected")
+	assert.ElementsMatch(t, expectedHull, convexHull(pointCloud).Vertices, "ConvexHull should be as expected")
 }
 
 // Simple 2D test (triangle, all points on a plane)
@@ -67,7 +67,7 @@ func TestConvexHull2DTriangle(t *testing.T) {
 		{X: 7, Y: 2, Z: 1},
 	}
 
-	assert.ElementsMatch(t, expectedHull, ConvexHull(pointCloud), "ConvexHull should be as expected")
+	assert.ElementsMatch(t, expectedHull, convexHull(pointCloud).Vertices, "ConvexHull should be as expected")
 }
 
 // Simple 3D test (one point in a box)
@@ -106,7 +106,7 @@ func TestConvexHull3D(t *testing.T) {
 		{X: 5, Y: 5, Z: 5},
 	}
 
-	actual := ConvexHull(pointCloud)
+	actual := convexHull(pointCloud).Vertices
 
 	expected := []r3.Vector{
 		{X: 0, Y: 0, Z: 0},
@@ -149,7 +149,7 @@ func TestHalfEdgeOutput(t *testing.T) {
 		})
 	}
 
-	mesh := ConvexHullAsMesh(pointCloud)
+	mesh := new(QuickHull).ConvexHullAsMesh(pointCloud, 0)
 
 	assert.Equal(t, 12, len(mesh.Faces))
 	assert.Equal(t, 36, len(mesh.HalfEdges))
@@ -177,4 +177,8 @@ func TestPlanes(t *testing.T) {
 	dist = signedDistanceToPlane(r3.Vector{X: 6, Y: 0, Z: 0}, p)
 
 	assert.Equal(t, 8.0, dist)
+}
+
+func convexHull(pointCloud []r3.Vector) ConvexHull {
+	return new(QuickHull).ConvexHull(pointCloud, true, false, 0)
 }

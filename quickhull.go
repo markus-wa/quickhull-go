@@ -8,26 +8,12 @@ import (
 )
 
 const (
-	epsilon = 0.0000001
+	defaultEpsilon = 0.0000001
 )
 
-// ConvexHull calculates the convex hull of the given point cloud using the Quickhull algorithm.
+// QuickHull can be used to calculate the convex hull of a point cloud.
 // See: https://en.wikipedia.org/wiki/Quickhull
-func ConvexHull(pointCloud []r3.Vector) []r3.Vector {
-	qh := new(quickHull)
-	hull := qh.convexHull(pointCloud, true, false, epsilon)
-	return hull.vertices
-}
-
-// ConvexHullAsMesh calculates the convex hull and returns it as a half-edge-mesh.
-// See also: ConvexHull()
-func ConvexHullAsMesh(pointCloud []r3.Vector) HalfEdgeMesh {
-	qh := new(quickHull)
-	qh.buildMesh(pointCloud, epsilon)
-	return newHalfEdgeMesh(qh.mesh, qh.vertexData)
-}
-
-type quickHull struct {
+type QuickHull struct {
 	epsilon        float64
 	epsilonSquared float64
 
@@ -47,14 +33,27 @@ type diagnostics struct {
 	failedHorizonEdges int // How many times QuickHull failed to solve the horizon edge. Failures lead to degenerated convex hulls.
 }
 
-func (qh *quickHull) convexHull(pointCloud []r3.Vector, ccw bool, useOriginalIndices bool, epsilon float64) convexHull {
+// ConvexHull calculates the convex hull of the given point cloud using the Quickhull algorithm.
+// If epsilon is <= 0 a default value will be used.
+func (qh *QuickHull) ConvexHull(pointCloud []r3.Vector, ccw bool, useOriginalIndices bool, epsilon float64) ConvexHull {
 	qh.buildMesh(pointCloud, epsilon)
 	return newConvexHull(qh.mesh, qh.vertexData, ccw, useOriginalIndices)
 }
 
-func (qh *quickHull) buildMesh(pointCloud []r3.Vector, epsilon float64) {
+// ConvexHull calculates the convex hull of the given point cloud using the Quickhull algorithm and returns it as a HalfEdgeMesh.
+// If epsilon is <= 0 a default value will be used.
+func (qh *QuickHull) ConvexHullAsMesh(pointCloud []r3.Vector, epsilon float64) HalfEdgeMesh {
+	qh.buildMesh(pointCloud, epsilon)
+	return newHalfEdgeMesh(qh.mesh, qh.vertexData)
+}
+
+func (qh *QuickHull) buildMesh(pointCloud []r3.Vector, epsilon float64) {
 	if len(pointCloud) == 0 {
 		return
+	}
+
+	if epsilon <= 0 {
+		epsilon = defaultEpsilon
 	}
 
 	qh.vertexData = pointCloud
@@ -86,7 +85,7 @@ func (qh *quickHull) buildMesh(pointCloud []r3.Vector, epsilon float64) {
 }
 
 // This will update m_mesh from which we create the ConvexHull object that getConvexHull function returns
-func (qh *quickHull) createConvexHalfEdgeMesh() {
+func (qh *QuickHull) createConvexHalfEdgeMesh() {
 	var visibleFaces []int
 	var horizontalEdges []int
 
@@ -326,7 +325,7 @@ func (qh *quickHull) createConvexHalfEdgeMesh() {
 }
 
 // Create a half edge mesh representing the base tetrahedron from which the QuickHull iteration proceeds. m_extremeValues must be properly set up when this is called.
-func (qh *quickHull) initialTetrahedron() meshBuilder {
+func (qh *QuickHull) initialTetrahedron() meshBuilder {
 	nVertices := len(qh.vertexData)
 
 	// If we have at most 3 points, just return p1 degenerate tetrahedron:
@@ -472,7 +471,7 @@ func (qh *quickHull) initialTetrahedron() meshBuilder {
 }
 
 // Associates a point with a Face if the point resides on the positive side of the plane. Returns true if the points was on the positive side.
-func (qh *quickHull) addPointToFace(face *meshBuilderFace, pointIndex int) bool {
+func (qh *QuickHull) addPointToFace(face *meshBuilderFace, pointIndex int) bool {
 	d := signedDistanceToPlane(qh.vertexData[pointIndex], face.plane)
 	if d > 0 && d*d > qh.epsilonSquared*face.plane.sqrNLength {
 		/* TODO: optimize
@@ -491,7 +490,7 @@ func (qh *quickHull) addPointToFace(face *meshBuilderFace, pointIndex int) bool 
 }
 
 // Given a list of half edges, try to rearrange them so that they form a loop. Return true on success.
-func (qh quickHull) reorderHorizontalEdges(horizontalEdges []int) bool {
+func (qh QuickHull) reorderHorizontalEdges(horizontalEdges []int) bool {
 	nEdges := len(horizontalEdges)
 	for i := 0; i < nEdges-1; i++ {
 		endVertex := qh.mesh.halfEdges[horizontalEdges[i]].EndVertex

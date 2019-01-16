@@ -4,14 +4,24 @@ import (
 	"github.com/golang/geo/r3"
 )
 
-type convexHull struct {
+type ConvexHull struct {
 	optimizedVertexBuffer []r3.Vector
-	vertices              []r3.Vector
-	indices               []int
+	Vertices              []r3.Vector
+	Indices               []int
 }
 
-func newConvexHull(mesh meshBuilder, pointCloud []r3.Vector, ccw bool, useOriginalIndices bool) convexHull {
-	var hull convexHull
+func (hull ConvexHull) Triangles() [][3]r3.Vector {
+	triangles := make([][3]r3.Vector, len(hull.Indices)/3)
+
+	for i, idx := range hull.Indices {
+		triangles[i/3][i&3] = hull.Vertices[idx]
+	}
+
+	return triangles
+}
+
+func newConvexHull(mesh meshBuilder, pointCloud []r3.Vector, ccw bool, useOriginalIndices bool) ConvexHull {
+	var hull ConvexHull
 
 	faceProcessed := make([]bool, len(mesh.faces))
 	var faceStack []int
@@ -26,7 +36,7 @@ func newConvexHull(mesh meshBuilder, pointCloud []r3.Vector, ccw bool, useOrigin
 	}
 
 	finalMeshFaceCount := len(mesh.faces) - len(mesh.disabledFaces)
-	hull.indices = make([]int, finalMeshFaceCount*3)
+	hull.Indices = make([]int, 0, finalMeshFaceCount*3)
 	vertexIndexMapping := make(map[int]int) // Map vertex indices from original point cloud to the new mesh vertex indices
 
 	for len(faceStack) > 0 {
@@ -50,37 +60,33 @@ func newConvexHull(mesh meshBuilder, pointCloud []r3.Vector, ccw bool, useOrigin
 
 		vertices := mesh.vertexIndicesOfFace(topFace)
 		if !useOriginalIndices {
-			for _, v := range vertices {
-				//it, found := vertexIndexMapping[v]
-				_, found := vertexIndexMapping[v]
+			for i, v := range vertices {
+				it, found := vertexIndexMapping[v]
 				if !found {
 					hull.optimizedVertexBuffer = append(hull.optimizedVertexBuffer, pointCloud[v])
 					tmp := len(hull.optimizedVertexBuffer) - 1
 					vertexIndexMapping[v] = tmp
-					//v = tmp
+					vertices[i] = tmp
+				} else {
+					vertices[i] = it + 1
 				}
-				/*
-					else {
-						v = it + 1
-					}
-				*/
 			}
 		}
 
-		hull.indices = append(hull.indices, vertices[0])
+		hull.Indices = append(hull.Indices, vertices[0])
 		if ccw {
-			hull.indices = append(hull.indices, vertices[2])
-			hull.indices = append(hull.indices, vertices[1])
+			hull.Indices = append(hull.Indices, vertices[2])
+			hull.Indices = append(hull.Indices, vertices[1])
 		} else {
-			hull.indices = append(hull.indices, vertices[1])
-			hull.indices = append(hull.indices, vertices[2])
+			hull.Indices = append(hull.Indices, vertices[1])
+			hull.Indices = append(hull.Indices, vertices[2])
 		}
 	}
 
 	if useOriginalIndices {
-		hull.vertices = pointCloud
+		hull.Vertices = pointCloud
 	} else {
-		hull.vertices = hull.optimizedVertexBuffer
+		hull.Vertices = hull.optimizedVertexBuffer
 	}
 
 	return hull
