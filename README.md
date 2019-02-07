@@ -19,7 +19,21 @@ This is different from Google's S2 Geometry implementation because it works in â
 
 ## Example
 
-	TODO
+```go
+func (inf Inferno) ConvexHull3D() quickhull.ConvexHull {
+	pointCloud := []r3.Vector{
+		{X: 1, Y: 2, Z: 1},
+		{X: 4, Y: 7, Z: 1},
+		{X: 7, Y: 2, Z: 1},
+		{X: 4, Y: 4, Z: 1}, // This point is inside the hull
+	}
+
+	hull := new(QuickHull).ConvexHull(pointCloud, true, false, 0)
+
+	fmt.Println(hull.Vertices) // does not contain (4,4,1)
+	fmt.Println(hull.Triangles()) // triangles that make up the convex hull - [][3]r3.Vector, where each vector is a corner of the triangle
+}
+```
 
 
 ## License
