@@ -19,8 +19,19 @@ This is different from Google's S2 Geometry implementation because it works in â
 
 ## Example
 
+Example with a simple, planar point-cloud.
+
 ```go
-func (inf Inferno) ConvexHull3D() quickhull.ConvexHull {
+package main
+
+import (
+	"fmt"
+
+	r3 "github.com/golang/geo/r3"
+	quickhull "github.com/markus-wa/quickhull-go"
+)
+
+func main() {
 	pointCloud := []r3.Vector{
 		{X: 1, Y: 2, Z: 1},
 		{X: 4, Y: 7, Z: 1},
