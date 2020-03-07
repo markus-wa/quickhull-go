@@ -15,7 +15,7 @@ This is different from Google's S2 Geometry implementation because it works in â
 
 ## Go Get
 
-	go get -u github.com/markus-wa/quickhull-go
+	go get -u github.com/markus-wa/quickhull-go/v2
 
 ## Example
 
@@ -28,7 +28,7 @@ import (
 	"fmt"
 
 	r3 "github.com/golang/geo/r3"
-	quickhull "github.com/markus-wa/quickhull-go"
+	quickhull "github.com/markus-wa/quickhull-go/v2"
 )
 
 func main() {
