@@ -1,5 +1,7 @@
 # quickhull-go
 
+![image](https://user-images.githubusercontent.com/5138316/119959867-4c400700-bf9c-11eb-9fae-3db3d5176fc6.png)
+
 A 3D [Quickhull](https://en.wikipedia.org/wiki/Quickhull) implementation in Go.
 
 Big thanks to [@akuukka](https://github.com/akuukka) for their public domain [C++ implementation](https://github.com/akuukka/quickhull) which was used as a reference.
