@@ -1,0 +1,50 @@
+on: [push, pull_request]
+
+name: CI
+
+jobs:
+  ci:
+    strategy:
+      matrix:
+        go-version:
+        - 1.11.x
+        - 1.19.x
+
+    runs-on: ubuntu-latest
+
+    env:
+      GO111MODULE: on
+
+    steps:
+    - name: Install Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: ${{ matrix.go-version }}
+
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Download Go Deps
+      run: go mod download
+
+    - name: Install Tools
+      run: |
+        # Fetch refs for linter
+        git config remote.origin.fetch +refs/heads/*:refs/remotes/origin/*
+        git fetch
+
+        # Install golangci-lint
+        curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.18.0
+
+    - name: Lint Changed Code
+      run: golangci-lint run --new-from-rev origin/master
+
+    - name: Run Race Tests
+      run: go test -v -race
+
+    # Note: We run ALL tests again to get full coverage
+    #       Race tests are too slow and skip the regression set
+    - name: All Tests + Coverage
+      run: |
+        go test -v -coverprofile=coverage.txt -covermode=count
+        bash <(curl -s https://codecov.io/bash)
