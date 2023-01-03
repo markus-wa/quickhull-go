@@ -1,12 +1,64 @@
 package quickhull
 
 import (
+	"fmt"
 	"math/rand"
+	"reflect"
 	"testing"
 
 	"github.com/golang/geo/r3"
-	"github.com/stretchr/testify/assert"
 )
+
+// https://stackoverflow.com/questions/36000487/check-for-equality-on-slices-without-order
+func elementsMatch(xs, ys []r3.Vector) bool {
+	if len(xs) != len(ys) {
+		return false
+	}
+
+	// create a map of string -> int
+	diff := make(map[r3.Vector]int, len(xs))
+	for _, x := range xs {
+		// 0 value for int is 0, so just increment a counter for the string
+		diff[x]++
+	}
+
+	for _, y := range ys {
+		// If the string y is not in diff bail out early
+		if _, ok := diff[y]; !ok {
+			return false
+		}
+
+		diff[y]--
+
+		if diff[y] == 0 {
+			delete(diff, y)
+		}
+	}
+
+	return len(diff) == 0
+}
+
+func assertElementsMatch(t *testing.T, xs, ys []r3.Vector, msgAndArgs ...interface{}) {
+	t.Helper()
+
+	if !elementsMatch(xs, ys) {
+		msg := fmt.Sprint(msgAndArgs...)
+
+		if msg == "" {
+			msg = "assertion failed"
+		}
+
+		t.Errorf("%s: elements do not match: %v != %v", msg, xs, ys)
+	}
+}
+
+func assertEqual(t *testing.T, expected, actual interface{}) {
+	t.Helper()
+
+	if !reflect.DeepEqual(expected, actual) {
+		t.Errorf("assertion failed: %v != %v", expected, actual)
+	}
+}
 
 // Simple 2D test (square, all points on a plane)
 func TestConvexHull2DSquare(t *testing.T) {
@@ -39,7 +91,7 @@ func TestConvexHull2DSquare(t *testing.T) {
 		{X: 10, Y: 10, Z: 1},
 	}
 
-	assert.ElementsMatch(t, expectedHull, convexHull(pointCloud).Vertices, "ConvexHull should be as expected")
+	assertElementsMatch(t, expectedHull, convexHull(pointCloud).Vertices, "ConvexHull should be as expected")
 }
 
 // Simple 2D test (triangle, all points on a plane)
@@ -67,7 +119,7 @@ func TestConvexHull2DTriangle(t *testing.T) {
 		{X: 7, Y: 2, Z: 1},
 	}
 
-	assert.ElementsMatch(t, expectedHull, convexHull(pointCloud).Vertices, "ConvexHull should be as expected")
+	assertElementsMatch(t, expectedHull, convexHull(pointCloud).Vertices, "ConvexHull should be as expected")
 }
 
 // Simple 3D test (one point in a box)
@@ -119,8 +171,8 @@ func TestConvexHull3D(t *testing.T) {
 		{X: 10, Y: 10, Z: 10},
 	}
 
-	assert.Equal(t, 8, len(actual))
-	assert.ElementsMatch(t, expected, actual, "ConvexHull should be as expected")
+	assertEqual(t, 8, len(actual))
+	assertElementsMatch(t, expected, actual, "ConvexHull should be as expected")
 }
 
 func TestHalfEdgeOutput(t *testing.T) {
@@ -151,9 +203,9 @@ func TestHalfEdgeOutput(t *testing.T) {
 
 	mesh := new(QuickHull).ConvexHullAsMesh(pointCloud, 0)
 
-	assert.Equal(t, 12, len(mesh.Faces))
-	assert.Equal(t, 36, len(mesh.HalfEdges))
-	assert.Equal(t, 8, len(mesh.Vertices))
+	assertEqual(t, 12, len(mesh.Faces))
+	assertEqual(t, 36, len(mesh.HalfEdges))
+	assertEqual(t, 8, len(mesh.Vertices))
 }
 
 func randF64(min, max float64) float64 {
@@ -166,17 +218,17 @@ func TestPlanes(t *testing.T) {
 	p := newPlane(m, n)
 
 	dist := signedDistanceToPlane(r3.Vector{X: 3, Y: 0, Z: 0}, p)
-	assert.Equal(t, 1.0, dist)
+	assertEqual(t, 1.0, dist)
 
 	dist = signedDistanceToPlane(r3.Vector{X: 1, Y: 0, Z: 0}, p)
-	assert.Equal(t, -1.0, dist)
+	assertEqual(t, -1.0, dist)
 
 	m = r3.Vector{X: 2, Y: 0, Z: 0}
 	p = newPlane(m, n)
 
 	dist = signedDistanceToPlane(r3.Vector{X: 6, Y: 0, Z: 0}, p)
 
-	assert.Equal(t, 8.0, dist)
+	assertEqual(t, 8.0, dist)
 }
 
 func convexHull(pointCloud []r3.Vector) ConvexHull {
